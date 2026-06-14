@@ -23,14 +23,15 @@ def _render(template: str, name: str) -> str:
     return template.replace("{name}", name)
 
 
-def send_email(to_addr: str, name: str) -> bool:
+def send_email(to_addr: str, greeting_name: str, display_name: str = "") -> bool:
     template = _load_template()
-    body = _render(template, name)
+    body = _render(template, greeting_name)
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = config.EMAIL_SUBJECT
     msg["From"]    = formataddr((config.SENDER_NAME, config.SMTP_FROM))
-    msg["To"]      = formataddr((name, to_addr)) if name else to_addr
+    to_label = display_name or greeting_name
+    msg["To"]      = formataddr((to_label, to_addr)) if to_label else to_addr
     if config.SMTP_REPLY_TO:
         msg["Reply-To"] = config.SMTP_REPLY_TO
     if config.SMTP_UNSUBSCRIBE_URL:
@@ -71,11 +72,11 @@ class Mailer:
         self.sent    = 0
         self.failed  = 0
 
-    def send(self, to_addr: str, name: str) -> bool:
+    def send(self, to_addr: str, greeting_name: str, display_name: str = "") -> bool:
         if config.DRY_RUN:
-            log.info(f"[DRY RUN] → {to_addr} ({name})")
+            log.info(f"[DRY RUN] → {to_addr} ({greeting_name})")
             return True
-        ok = send_email(to_addr, name)
+        ok = send_email(to_addr, greeting_name, display_name)
         if ok:
             self.sent += 1
             time.sleep(config.SEND_DELAY_S)

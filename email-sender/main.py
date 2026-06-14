@@ -69,6 +69,7 @@ def run(xlsx_path: str = None):
         entry = {
             "_sheet":       c["_sheet"],
             "name":         c["name"],
+            "first_name":   c.get("first_name", c["name"]),
             "email":        c["email"],
             "status":       c.get("status", ""),
             "valid":        vr.valid_format,
@@ -159,7 +160,7 @@ def run(xlsx_path: str = None):
             continue
 
         try:
-            ok = mailer.send(r["email"], r["name"])
+            ok = mailer.send(r["email"], r["first_name"], r["name"])
         except smtplib.SMTPAuthenticationError:
             reason = "SMTP AUTH FAILED"
             r["send_failed"] = True

@@ -66,7 +66,7 @@ PERSONAL_DOMAINS = {
 EMAIL_SUBJECT = "Cooperation for Passive Income"
 
 # Path to body template file, or write the template inline here as a string.
-# Placeholders: {name}
+# Placeholders: {name} uses the first name from the Name column
 EMAIL_TEMPLATE = "templates/email_body.txt"
 
 # ── Output & logging ────────────────────────────────────────────────────
