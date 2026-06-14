@@ -5,20 +5,23 @@ Send emails to the 6-sheet Brazil client list via SMTP, with validation, filteri
 ## File Structure
 
 ```
-email-sender/
-├── main.py              ← Run this
-├── config.py            ← All settings (edit before use)
-├── validator.py         ← Format + MX + personal domain check
-├── reader.py            ← Multi-sheet XLSX reader
-├── sender.py            ← SMTP sender
-├── rate_limiter.py      ← Hourly/daily send quota guard
-├── report.py            ← 4-tab Excel result report
-├── templates/
-│   └── email_body.txt   ← Email body ({name} placeholder)
-├── output/              ← Reports saved here
-└── logs/
-    ├── run.log          ← Full send log
-    └── send_history.json ← Successful live sends used for hourly/daily limits
+EmailService/
+├── README.md
+├── email-sender/
+│   ├── main.py              ← Run this
+│   ├── config.py            ← All settings (edit before use)
+│   ├── validator.py         ← Format + MX + personal domain check
+│   ├── reader.py            ← Multi-sheet XLSX reader
+│   ├── sender.py            ← SMTP sender
+│   ├── rate_limiter.py      ← Hourly/daily send quota guard
+│   ├── report.py            ← 4-tab Excel result report
+│   ├── templates/
+│   │   └── email_body.txt   ← Email body ({name} placeholder)
+│   ├── output/              ← Reports saved here
+│   └── logs/
+│       ├── run.log          ← Full send log
+│       └── send_history.json ← Successful live sends used for hourly/daily limits
+└── smtp/                    ← Optional sibling SMTP project / shared .env
 ```
 
 ---
@@ -27,12 +30,13 @@ email-sender/
 
 ### 1. Install dependencies
 ```bash
-pip install openpyxl pandas dnspython
+cd email-sender
+pip install -r requirements.txt
 ```
 
 ### 2. Configure SMTP
 
-This project can reuse the sibling `../smtp/.env` file if it exists. A local `email-sender/.env` uses the same variables and takes priority:
+`email-sender` can reuse the sibling `smtp/.env` file if it exists. A local `email-sender/.env` uses the same variables and takes priority:
 
 ```text
 SMTP_SENDER_NAME=Your Company
@@ -52,7 +56,7 @@ For Gmail, regular passwords don't work for SMTP. You need an App Password:
 2. Create App Password: https://myaccount.google.com/apppasswords
 3. Select **Mail** → **Other** → copy the 16-character code
 
-### 3. Review `config.py`
+### 3. Review `email-sender/config.py`
 
 ```python
 DRY_RUN = True
@@ -60,13 +64,15 @@ MAX_SENDS_PER_HOUR = 40
 MAX_SENDS_PER_DAY = 300
 ```
 
-### 4. Place Brazil.xlsx next to `main.py`
+### 4. Place Brazil.xlsx next to `email-sender/main.py`
 
 ---
 
 ## Running
 
 ```bash
+cd email-sender
+
 # Dry run (validate only, no emails sent) — default
 python main.py
 
@@ -90,7 +96,7 @@ python main.py
 
 The 6 sheets (Maranhão, Alagoas, Piauí, Distrito Federal, Rio Grande do Sul, Santa Catarina) are all loaded automatically.
 
-To target specific state(s), edit `config.py`:
+To target specific state(s), edit `email-sender/config.py`:
 ```python
 TARGET_SHEETS = ["Maranhão", "Alagoas"]  # or None for all
 ```
@@ -110,7 +116,7 @@ TARGET_SHEETS = ["Maranhão", "Alagoas"]  # or None for all
 
 ---
 
-## Output Report (output/result_YYYYMMDD_HHMMSS.xlsx)
+## Output Report (email-sender/output/result_YYYYMMDD_HHMMSS.xlsx)
 
 | Tab | Contents |
 |---|---|
@@ -133,7 +139,7 @@ TARGET_SHEETS = ["Maranhão", "Alagoas"]  # or None for all
 
 ## Send Limits
 
-The sender enforces both hourly and daily limits across multiple runs using `logs/send_history.json`.
+The sender enforces both hourly and daily limits across multiple runs using `email-sender/logs/send_history.json`.
 
 | Setting | Default |
 |---|---|
