@@ -79,9 +79,15 @@ cd email-sender
 python main.py
 
 # Specify a different file path
-python main.py /path/to/Brazil.xlsx
+python main.py Brazil.xlsx
 
-# Live send: set DRY_RUN = False in config.py, then:
+# Test one recipient (preview only)
+python main.py test --name "Casimiro Rocha" --email you@example.com
+
+# Send one real test email
+python main.py test --name "Casimiro Rocha" --email you@example.com --send
+
+# Live bulk send: set DRY_RUN = False in config.py, then:
 python main.py
 # → confirm with "y" when prompted
 ```

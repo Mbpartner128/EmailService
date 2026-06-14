@@ -3,7 +3,7 @@ import pandas as pd
 import config
 
 
-def _first_name(full_name: str) -> str:
+def first_name(full_name: str) -> str:
     """Return the first word from a full name for email greetings."""
     return full_name.strip().split()[0] if full_name.strip() else ""
 
@@ -69,7 +69,7 @@ def load_clients(path: str = None) -> list[dict]:
 
             clients.append({
                 "name":       name,
-                "first_name": _first_name(name),
+                "first_name": first_name(name),
                 "email":      email,
                 "status":     status,
                 "_sheet":     sheet_name,

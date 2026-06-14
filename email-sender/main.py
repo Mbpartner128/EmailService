@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # main.py
+import argparse
 import logging
 import smtplib
 import sys
@@ -7,9 +8,9 @@ from pathlib import Path
 from collections import Counter
 
 import config
-from reader import load_clients
+from reader import load_clients, first_name
 from validator import validate
-from sender import Mailer
+from sender import Mailer, send_email, preview_email
 from report import write_report
 from rate_limiter import SendRateLimiter
 
@@ -26,9 +27,9 @@ log = logging.getLogger(__name__)
 
 
 def print_section(title: str):
-    print(f"\n{'─'*58}")
+    print(f"\n{'-'*58}")
     print(f"  {title}")
-    print(f"{'─'*58}")
+    print(f"{'-'*58}")
 
 
 def run(xlsx_path: str = None):
@@ -192,6 +193,90 @@ def run(xlsx_path: str = None):
     write_report(results)
 
 
+def run_test(full_name: str, email: str, send: bool = False, yes: bool = False) -> int:
+    log.info("--- Test email ---")
+    print_section("Test email")
+    print(f"  Name       : {full_name}")
+    print(f"  First name : {first_name(full_name)}")
+    print(f"  Email      : {email}")
+    print(f"  SMTP from  : {config.SMTP_FROM}")
+    print(f"  Subject    : {config.EMAIL_SUBJECT}")
+
+    vr = validate(email)
+    validation_parts = []
+    if vr.valid_format:
+        validation_parts.append("format OK")
+    if vr.mx_ok is True:
+        validation_parts.append("MX OK")
+    elif vr.mx_ok is False:
+        validation_parts.append("MX failed")
+    if vr.is_personal:
+        validation_parts.append("personal domain")
+    print(f"  Validation : {', '.join(validation_parts) or 'invalid'}")
+    if not vr.valid_format:
+        log.error("Invalid email address.")
+        return 1
+
+    greeting = first_name(full_name)
+    body = preview_email(greeting)
+    print("\n  Preview:")
+    print("  " + "-" * 54)
+    for line in body.splitlines():
+        print(f"  {line}")
+    print("  " + "-" * 54)
+
+    if not send:
+        print("\n  Dry run only. Add --send to deliver this test email.")
+        return 0
+
+    ans = "y" if yes else input("\n  Send this test email? [y/N] ").strip().lower()
+    if ans != "y":
+        log.info("Test send aborted.")
+        return 0
+
+    print_section("Sending test email…")
+    try:
+        ok = send_email(email, greeting, full_name)
+    except smtplib.SMTPAuthenticationError:
+        log.error("SMTP authentication failed.")
+        return 1
+
+    if ok:
+        print(f"\n  ✅ Test email sent to {email}")
+        return 0
+
+    print(f"\n  ❌ Failed to send test email to {email}")
+    return 1
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Send emails from a Brazil client XLSX list, or send one test email."
+    )
+    subparsers = parser.add_subparsers(dest="command")
+
+    test = subparsers.add_parser("test", help="Send one test email to a specific name and address.")
+    test.add_argument("--name", required=True, help='Full name, e.g. "Casimiro Rocha"')
+    test.add_argument("--email", required=True, help='Recipient email, e.g. "you@example.com"')
+    test.add_argument("--send", action="store_true", help="Actually send. Without this, preview only.")
+    test.add_argument("--yes", action="store_true", help="Skip confirmation prompt when using --send.")
+
+    send = subparsers.add_parser("send", help="Validate and send emails from an XLSX client list.")
+    send.add_argument("xlsx", nargs="?", help="Path to the client XLSX file.")
+
+    return parser
+
+
 if __name__ == "__main__":
-    xlsx = sys.argv[1] if len(sys.argv) > 1 else None
-    run(xlsx)
+    if len(sys.argv) > 1 and sys.argv[1] not in {"test", "send"} and not sys.argv[1].startswith("-"):
+        run(sys.argv[1])
+        raise SystemExit(0)
+
+    args = build_parser().parse_args()
+    if args.command == "test":
+        raise SystemExit(run_test(args.name, args.email, send=args.send, yes=args.yes))
+    if args.command == "send":
+        run(args.xlsx)
+        raise SystemExit(0)
+
+    run(None)

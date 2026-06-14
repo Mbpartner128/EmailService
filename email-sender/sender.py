@@ -23,6 +23,10 @@ def _render(template: str, name: str) -> str:
     return template.replace("{name}", name)
 
 
+def preview_email(greeting_name: str) -> str:
+    return _render(_load_template(), greeting_name)
+
+
 def send_email(to_addr: str, greeting_name: str, display_name: str = "") -> bool:
     template = _load_template()
     body = _render(template, greeting_name)
