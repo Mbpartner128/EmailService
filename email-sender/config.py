@@ -3,31 +3,23 @@ import os
 from pathlib import Path
 
 
-def _load_env_file(path: str, override: bool = False) -> None:
-    env_path = Path(path)
-    if not env_path.exists():
+def _load_env_file(path: Path) -> None:
+    if not path.exists():
         return
 
-    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
 
         key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip().strip('"').strip("'")
-        if override:
-            os.environ[key] = value
-        else:
-            os.environ.setdefault(key, value)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
-# Reuse the sibling smtp project's .env when present, then allow a local .env override.
-_ROOT = Path(__file__).resolve().parent.parent
-_load_env_file(_ROOT / "smtp" / ".env")
-_load_env_file(Path(__file__).resolve().parent / ".env", override=True)
+_APP_DIR = Path(__file__).resolve().parent
+_load_env_file(_APP_DIR / ".env")
 
-# ── Gmail SMTP ─────────────────────────────────────────────────────────
+# ── SMTP ───────────────────────────────────────────────────────────────
 SMTP_HOST     = os.environ.get("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT     = int(os.environ.get("SMTP_PORT", "587"))
 SMTP_SECURITY = os.environ.get("SMTP_SECURITY", "starttls").lower()  # none, starttls, tls, ssl

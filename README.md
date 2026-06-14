@@ -18,10 +18,10 @@ EmailService/
 │   ├── templates/
 │   │   └── email_body.txt   ← Email body ({name} placeholder)
 │   ├── output/              ← Reports saved here
+│   ├── .env                 ← SMTP credentials (create from .env.example)
 │   └── logs/
 │       ├── run.log          ← Full send log
 │       └── send_history.json ← Successful live sends used for hourly/daily limits
-└── smtp/                    ← Optional sibling SMTP project / shared .env
 ```
 
 ---
@@ -36,7 +36,13 @@ pip install -r requirements.txt
 
 ### 2. Configure SMTP
 
-`email-sender` can reuse the sibling `smtp/.env` file if it exists. A local `email-sender/.env` uses the same variables and takes priority:
+Create `email-sender/.env` from the example file:
+
+```bash
+copy .env.example .env
+```
+
+Edit `.env` with your SMTP account values:
 
 ```text
 SMTP_SENDER_NAME=Your Company
@@ -50,11 +56,7 @@ SMTP_PASSWORD=replace-with-your-password
 SMTP_UNSUBSCRIBE_URL=https://example.com/unsubscribe
 ```
 
-For Gmail, regular passwords don't work for SMTP. You need an App Password:
-
-1. Enable **2-Step Verification**: https://myaccount.google.com/security
-2. Create App Password: https://myaccount.google.com/apppasswords
-3. Select **Mail** → **Other** → copy the 16-character code
+Do not commit `.env`.
 
 ### 3. Review `email-sender/config.py`
 

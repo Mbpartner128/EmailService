@@ -185,7 +185,7 @@ def write_report(results: list[dict], path: str = None) -> str:
         ("MX Record ✅/❌", "Domain DNS has a mail server (can receive email)"),
         ("Personal ⚠️", f"Domain is in personal list: {', '.join(sorted(config.PERSONAL_DOMAINS)[:6])}…"),
         ("Personal blocking", f"BLOCK_PERSONAL_EMAIL = {config.BLOCK_PERSONAL_EMAIL}"),
-        ("Sent ✅", "Email was successfully delivered via Gmail SMTP"),
+        ("Sent ✅", "Email was successfully delivered via SMTP"),
         ("Dry run 🧪", "Email was selected but not actually sent because DRY_RUN = True"),
         ("Status Skipped", f"Original status column matched: {config.SKIP_STATUSES}"),
     ]
